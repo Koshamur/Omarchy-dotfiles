@@ -16,6 +16,15 @@ set -uo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd -- "$SCRIPT_DIR/.." && pwd)"
+COMMON_LIB="$SCRIPT_DIR/lib/common.sh"
+
+if [[ ! -f "$COMMON_LIB" ]]; then
+  printf 'Ошибка: не найден общий модуль %s\n' "$COMMON_LIB" >&2
+  exit 1
+fi
+# shellcheck source=Shell/lib/common.sh
+source "$COMMON_LIB"
+
 CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}"
 STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/system-setup"
 OMARCHY_STATE="$HOME/.local/state/omarchy"
@@ -27,25 +36,10 @@ PASS=0
 WARN=0
 ERRORS=0
 
-if [[ -t 1 ]]; then
-  C_BLUE=$'\033[1;34m'
-  C_GREEN=$'\033[1;32m'
-  C_YELLOW=$'\033[1;33m'
-  C_RED=$'\033[1;31m'
-  C_RESET=$'\033[0m'
-else
-  C_BLUE=''
-  C_GREEN=''
-  C_YELLOW=''
-  C_RED=''
-  C_RESET=''
-fi
-
 section() { printf '\n%s== %s ==%s\n' "$C_BLUE" "$*" "$C_RESET"; }
 pass()    { PASS=$((PASS + 1)); printf '%s  ✓%s %s\n' "$C_GREEN" "$C_RESET" "$*"; }
 warn()    { WARN=$((WARN + 1)); printf '%s  !%s %s\n' "$C_YELLOW" "$C_RESET" "$*"; }
 fail()    { ERRORS=$((ERRORS + 1)); printf '%s  ✗%s %s\n' "$C_RED" "$C_RESET" "$*"; }
-info()    { printf '    %s\n' "$*"; }
 
 # ----------------------------- Репозиторий ----------------------------------
 
@@ -59,6 +53,8 @@ for file in \
   Shell/ohmyzsh-setup.sh \
   Shell/services.sh \
   Shell/theme.sh \
+  Shell/rollback.sh \
+  Shell/lib/common.sh \
   hypr/bindings.lua \
   hypr/input.lua \
   hypr/looknfeel.lua \
@@ -73,7 +69,7 @@ else
   fail "отсутствуют файлы: ${missing[*]}"
 fi
 
-for file in setup.sh Shell/install_packages.sh Shell/ohmyzsh-setup.sh Shell/services.sh Shell/theme.sh Shell/verify.sh; do
+for file in setup.sh Shell/install_packages.sh Shell/ohmyzsh-setup.sh Shell/services.sh Shell/theme.sh Shell/rollback.sh Shell/verify.sh; do
   if [[ -x "$ROOT/$file" ]]; then
     pass "$file исполняемый"
   else

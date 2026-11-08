@@ -5,7 +5,8 @@
 #  Назначение:
 #    Разворачивает окружение из каталога этого скрипта:
 #      1) копирует каталоги hypr/ и ghostty/ в ~/.config (слиянием);
-#      2) запускает все *.sh-скрипты из подкаталога Shell/, кроме verify.sh.
+#      2) запускает все *.sh-скрипты из подкаталога Shell/,
+#         кроме verify.sh и rollback.sh.
 #
 #  Повторные запуски безопасны и не выполняют одну и ту же работу заново:
 #    • каталог копируется, только если его исходники изменились с момента
@@ -17,8 +18,14 @@
 #  Отметки о выполнении хранятся в:
 #    ~/.local/state/system-setup/
 #
+#  Вывод setup.sh записывается в:
+#    ~/.local/state/system-setup/setup.log
+#
+#  Одновременный запуск двух копий setup.sh блокируется через flock.
+#
 #  Использование:
 #    ./setup.sh                  применить только то, что ещё не применено
+#    ./setup.sh --dry-run        показать план без изменений
 #    ./setup.sh --force          скопировать и выполнить всё заново
 #    ./setup.sh --configs-only   только скопировать конфиги
 #    ./setup.sh --scripts-only   только выполнить скрипты
@@ -30,50 +37,39 @@ set -euo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 SCRIPT_SELF="$SCRIPT_DIR/$(basename -- "${BASH_SOURCE[0]}")"
 SCRIPTS_DIR="$SCRIPT_DIR/Shell"
+COMMON_LIB="$SCRIPTS_DIR/lib/common.sh"
 
 CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}"
 STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/system-setup"
 APPLIED_DIR="$STATE_DIR/applied"
 SCRIPTS_STATE_DIR="$STATE_DIR/scripts"
 BACKUP_ROOT="$STATE_DIR/backups"
+LOG_FILE=""
+LOCK_FILE="$STATE_DIR/setup.lock"
 
 CONFIG_DIRS=(hypr ghostty)
 
+BACKUP_SESSION=""
 FORCE=0
+DRY_RUN=0
 DO_CONFIGS=1
 DO_SCRIPTS=1
 MODE=all
 
-if [[ -t 1 ]]; then
-  C_BLUE=$'\033[1;34m'
-  C_GREEN=$'\033[1;32m'
-  C_YELLOW=$'\033[1;33m'
-  C_RED=$'\033[1;31m'
-  C_RESET=$'\033[0m'
-else
-  C_BLUE=''
-  C_GREEN=''
-  C_YELLOW=''
-  C_RED=''
-  C_RESET=''
+if [[ ! -f "$COMMON_LIB" ]]; then
+  printf 'Ошибка: не найден общий модуль %s\n' "$COMMON_LIB" >&2
+  exit 1
 fi
-
-log()  { printf '\n%s==>%s %s\n' "$C_BLUE" "$C_RESET" "$*"; }
-ok()   { printf '%s  ✓%s %s\n' "$C_GREEN" "$C_RESET" "$*"; }
-warn() { printf '%s  !%s %s\n' "$C_YELLOW" "$C_RESET" "$*"; }
-die()  { printf '%sОшибка:%s %s\n' "$C_RED" "$C_RESET" "$*" >&2; exit 1; }
+# shellcheck source=Shell/lib/common.sh
+source "$COMMON_LIB"
 
 usage() {
-  sed -n '2,26p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+  awk '
+    NR == 1 { next }
+    /^# =+$/ { if (seen++) exit; next }
+    { sub(/^# ?/, ""); print }
+  ' "${BASH_SOURCE[0]}"
 }
-
-# ------------------------------- Проверки -----------------------------------
-
-(( EUID == 0 )) && die "Не запускайте скрипт от root. Запустите его обычным пользователем — sudo запросится внутри установочных скриптов."
-
-for tool in sha256sum find sort cmp cp mktemp; do
-  command -v "$tool" >/dev/null 2>&1 || die "Не найдена утилита: $tool"
-done
 
 # ------------------------------ Параметры -----------------------------------
 
@@ -81,6 +77,9 @@ while (( $# )); do
   case "$1" in
     -f|--force)
       FORCE=1
+      ;;
+    -n|--dry-run)
+      DRY_RUN=1
       ;;
     --configs-only)
       [[ "$MODE" == "all" ]] || die "Нельзя одновременно указывать --configs-only и --scripts-only."
@@ -106,52 +105,55 @@ case "$MODE" in
   scripts) DO_CONFIGS=0; DO_SCRIPTS=1 ;;
 esac
 
-mkdir -p -- "$CONFIG_DIR" "$APPLIED_DIR" "$SCRIPTS_STATE_DIR" \
-  || die "Не удалось создать рабочие каталоги ($CONFIG_DIR, $STATE_DIR)."
+# ------------------------------- Проверки -----------------------------------
 
-# ----------------------------- Вспомогательное ------------------------------
+if (( EUID == 0 )); then
+  die "Не запускайте скрипт от root. Запустите его обычным пользователем — sudo запросится внутри установочных скриптов."
+fi
 
-# Отпечаток содержимого каталога: SHA-256 от списка «путь + содержимое файлов».
-tree_signature() {
-  local dir="$1"
-  (
-    cd -- "$dir" || exit 1
-    find . -type f -print0 | LC_ALL=C sort -z | xargs -0 -r sha256sum
-  ) | sha256sum | cut -d' ' -f1
+for tool in sha256sum find sort cmp cp mktemp; do
+  command -v "$tool" >/dev/null 2>&1 || die "Не найдена утилита: $tool"
+done
+
+if (( ! DRY_RUN )); then
+  for tool in tee flock; do
+    command -v "$tool" >/dev/null 2>&1 || die "Не найдена утилита: $tool"
+  done
+fi
+
+# --------------------------- Логирование и блокировка -----------------------
+
+setup_logging_and_lock() {
+  mkdir -p -- "$CONFIG_DIR" "$APPLIED_DIR" "$SCRIPTS_STATE_DIR" \
+    || die "Не удалось создать рабочие каталоги ($CONFIG_DIR, $STATE_DIR)."
+
+  LOG_FILE="$STATE_DIR/setup.log"
+
+  if ! exec 9>"$LOCK_FILE"; then
+    die "Не удалось открыть файл блокировки: $LOCK_FILE"
+  fi
+
+  if ! flock -n 9; then
+    die "Другой экземпляр setup.sh уже выполняется (блокировка: $LOCK_FILE)."
+  fi
+
+  log "setup.sh: $(date '+%Y-%m-%d %H:%M:%S')"
+  log "Лог: $LOG_FILE"
 }
 
-# Есть ли различия в файлах, которые берутся из источника?
-# Файлы, существующие только в приёмнике, намеренно игнорируются.
-tree_differs() {
-  local src="$1" dest="$2" rel
-  while IFS= read -r -d '' rel; do
-    if [[ ! -e "$dest/$rel" ]] || ! cmp -s -- "$src/$rel" "$dest/$rel"; then
-      return 0
-    fi
-  done < <(cd -- "$src" && find . -type f -print0 | LC_ALL=C sort -z)
-  return 1
-}
-
-stamp_matches() {
-  local stamp="$1" sig="$2"
-  [[ -f "$stamp" && "$(<"$stamp")" == "$sig" ]]
-}
-
-stamp_write() {
-  mkdir -p -- "$(dirname -- "$1")"
-  printf '%s\n' "$2" > "$1"
-}
-
-# Делает снимок каталога и печатает путь к нему.
-backup_dir() {
-  local name="$1" dest="$2" unique
-  mkdir -p -- "$BACKUP_ROOT"
-  unique="$(mktemp -d -- "$BACKUP_ROOT/$(date +%Y%m%d-%H%M%S).XXXXXX")"
-  cp -a -- "$dest" "$unique/$name"
-  printf '%s\n' "$unique/$name"
-}
+if (( ! DRY_RUN )); then
+  setup_logging_and_lock
+fi
 
 # --------------------------- Копирование конфигов ---------------------------
+
+# Одна сессия бэкапа на весь запуск: hypr и ghostty восстанавливаются вместе.
+ensure_backup_session() {
+  [[ -n "$BACKUP_SESSION" ]] && return 0
+
+  mkdir -p -- "$BACKUP_ROOT" || return 1
+  BACKUP_SESSION="$(mktemp -d -- "$BACKUP_ROOT/$(date +%Y%m%d-%H%M%S).XXXXXX")" || return 1
+}
 
 apply_config_dir() {
   local name="$1"
@@ -176,13 +178,27 @@ apply_config_dir() {
 
   # Даже при отсутствии отметки не копируем, если всё уже совпадает.
   if [[ -d "$dest" ]] && ! tree_differs "$src" "$dest"; then
+    if (( DRY_RUN )); then
+      info "$name: содержимое уже совпадает — копирование не потребуется."
+      return 0
+    fi
     stamp_write "$stamp" "$sig"
     ok "$name: в ~/.config уже актуальная версия — копирование не требуется."
     return 0
   fi
 
+  if (( DRY_RUN )); then
+    if [[ -e "$dest" ]]; then
+      info "$name: будет создана резервная копия и каталог скопирован в $dest."
+    else
+      info "$name: будет скопирован в $dest."
+    fi
+    return 0
+  fi
+
   if [[ -e "$dest" ]]; then
-    backup="$(backup_dir "$name" "$dest")" \
+    ensure_backup_session || die "$name: не удалось создать каталог резервных копий."
+    backup="$(backup_dir "$name" "$dest" "$BACKUP_ROOT" "$BACKUP_SESSION")" \
       || die "$name: не удалось создать резервную копию $dest."
     ok "$name: резервная копия → $backup"
   fi
@@ -209,8 +225,14 @@ run_script() {
     return 0
   fi
 
+  if (( DRY_RUN )); then
+    info "$name: будет выполнен."
+    return 0
+  fi
+
   log "Выполняю $name"
-  if bash -- "$script"; then
+  # Вывод дочернего скрипта пишем в лог синхронно, не теряя его при выходе.
+  if bash -- "$script" 2>&1 | tee -a -- "$LOG_FILE"; then
     stamp_write "$stamp" "$sig"
     ok "$name: выполнен."
     return 0
@@ -228,6 +250,10 @@ main() {
 
   log "Каталог-источник: $SCRIPT_DIR"
   log "Конфиги: $CONFIG_DIR; состояние: $STATE_DIR"
+
+  if (( DRY_RUN )); then
+    log "Режим --dry-run: изменения не вносятся."
+  fi
 
   if (( DO_CONFIGS )); then
     log "Шаг 1. Копирование конфигов"
@@ -254,10 +280,13 @@ main() {
           if [[ "$script" -ef "$SCRIPT_SELF" ]]; then
             continue
           fi
-          # verify.sh — отдельная проверка, запускается только через make verify.
-          if [[ "$(basename -- "$script")" == "verify.sh" ]]; then
-            continue
-          fi
+          # verify.sh запускается только через make verify,
+          # rollback.sh — только вручную через make rollback.
+          case "$(basename -- "$script")" in
+            verify.sh|rollback.sh)
+              continue
+              ;;
+          esac
           run_script "$script" || failed=1
         done
       fi
@@ -271,7 +300,12 @@ main() {
   fi
 
   printf '\n'
-  ok "Готово. Повторный запуск не будет ничего копировать и выполнять, пока исходники не изменятся."
+  if (( DRY_RUN )); then
+    ok "Dry-run завершён: изменения не вносились."
+  else
+    ok "Готово. Повторный запуск не будет ничего копировать и выполнять, пока исходники не изменятся."
+    info "Лог: $LOG_FILE"
+  fi
 }
 
 main "$@"

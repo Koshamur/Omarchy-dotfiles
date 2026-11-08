@@ -3,9 +3,9 @@ SHELL := /bin/bash
 .DEFAULT_GOAL := help
 
 ROOT := $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
-SCRIPTS := setup.sh $(wildcard Shell/*.sh)
+SCRIPTS := setup.sh $(wildcard Shell/*.sh) $(wildcard Shell/lib/*.sh)
 
-.PHONY: help install configs scripts services theme force check syntax shellcheck verify update
+.PHONY: help install configs scripts services theme force dry-run rollback check syntax shellcheck verify update
 
 help:
 	@echo "Omarchy dotfiles — доступные команды:"
@@ -16,6 +16,8 @@ help:
 	@echo "  make services    включить docker, bluetooth и fstrim.timer"
 	@echo "  make theme       установить и применить тему Fjord Frost"
 	@echo "  make force       скопировать и выполнить всё заново"
+	@echo "  make dry-run     показать план без изменений"
+	@echo "  make rollback    восстановить последний бэкап"
 	@echo "  make check       bash -n + shellcheck для всех скриптов"
 	@echo "  make syntax      только проверка синтаксиса bash -n"
 	@echo "  make shellcheck  только shellcheck"
@@ -40,6 +42,12 @@ theme:
 
 force:
 	cd "$(ROOT)" && ./setup.sh --force
+
+dry-run:
+	cd "$(ROOT)" && ./setup.sh --dry-run
+
+rollback:
+	cd "$(ROOT)" && ./Shell/rollback.sh
 
 check: syntax shellcheck
 

@@ -22,6 +22,16 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+COMMON_LIB="$SCRIPT_DIR/lib/common.sh"
+
+if [[ ! -f "$COMMON_LIB" ]]; then
+  printf 'Ошибка: не найден общий модуль %s\n' "$COMMON_LIB" >&2
+  exit 1
+fi
+# shellcheck source=Shell/lib/common.sh
+source "$COMMON_LIB"
+
 SERVICES=(
   docker.service
   bluetooth.service
@@ -32,23 +42,6 @@ DOCKER_GROUP="docker"
 FAILED=0
 RELOGIN=0
 
-if [[ -t 1 ]]; then
-  C_BLUE=$'\033[1;34m'
-  C_GREEN=$'\033[1;32m'
-  C_YELLOW=$'\033[1;33m'
-  C_RED=$'\033[1;31m'
-  C_RESET=$'\033[0m'
-else
-  C_BLUE=''
-  C_GREEN=''
-  C_YELLOW=''
-  C_RED=''
-  C_RESET=''
-fi
-
-log()  { printf '\n%s==>%s %s\n' "$C_BLUE" "$C_RESET" "$*"; }
-ok()   { printf '%s  ✓%s %s\n' "$C_GREEN" "$C_RESET" "$*"; }
-warn() { printf '%s  !%s %s\n' "$C_YELLOW" "$C_RESET" "$*"; }
 fail() { printf '%s  ✗%s %s\n' "$C_RED" "$C_RESET" "$*"; FAILED=1; }
 
 usage() {

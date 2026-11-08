@@ -19,12 +19,15 @@
 
 set -euo pipefail
 
-# ----------------------------- Вспомогательное ------------------------------
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+COMMON_LIB="$SCRIPT_DIR/lib/common.sh"
 
-log()  { printf '\n\033[1;34m==>\033[0m %s\n' "$*"; }
-ok()   { printf '\033[1;32m  ✓\033[0m %s\n' "$*"; }
-warn() { printf '\033[1;33m  !\033[0m %s\n' "$*"; }
-die()  { printf '\033[1;31mОшибка:\033[0m %s\n' "$*" >&2; exit 1; }
+if [[ ! -f "$COMMON_LIB" ]]; then
+  printf 'Ошибка: не найден общий модуль %s\n' "$COMMON_LIB" >&2
+  exit 1
+fi
+# shellcheck source=Shell/lib/common.sh
+source "$COMMON_LIB"
 
 # ------------------------------- Проверки -----------------------------------
 

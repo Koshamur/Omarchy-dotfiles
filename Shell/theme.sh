@@ -26,6 +26,14 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 REPO_DIR="$(cd -- "$SCRIPT_DIR/.." && pwd)"
+COMMON_LIB="$SCRIPT_DIR/lib/common.sh"
+
+if [[ ! -f "$COMMON_LIB" ]]; then
+  printf 'Ошибка: не найден общий модуль %s\n' "$COMMON_LIB" >&2
+  exit 1
+fi
+# shellcheck source=Shell/lib/common.sh
+source "$COMMON_LIB"
 
 THEME_NAME="Fjord Frost"
 THEME_SLUG="fjord-frost"
@@ -45,25 +53,6 @@ CURRENT_THEME_DIR="$CURRENT_DIR/theme"
 
 FORCE=0
 APPLY=1
-
-if [[ -t 1 ]]; then
-  C_BLUE=$'\033[1;34m'
-  C_GREEN=$'\033[1;32m'
-  C_YELLOW=$'\033[1;33m'
-  C_RED=$'\033[1;31m'
-  C_RESET=$'\033[0m'
-else
-  C_BLUE=''
-  C_GREEN=''
-  C_YELLOW=''
-  C_RED=''
-  C_RESET=''
-fi
-
-log()  { printf '\n%s==>%s %s\n' "$C_BLUE" "$C_RESET" "$*"; }
-ok()   { printf '%s  ✓%s %s\n' "$C_GREEN" "$C_RESET" "$*"; }
-warn() { printf '%s  !%s %s\n' "$C_YELLOW" "$C_RESET" "$*"; }
-die()  { printf '%sОшибка:%s %s\n' "$C_RED" "$C_RESET" "$*" >&2; exit 1; }
 
 usage() {
   cat <<'EOF'
@@ -119,40 +108,8 @@ fi
 
 # ----------------------------- Вспомогательное ------------------------------
 
-tree_signature() {
-  local dir="$1"
-  (
-    cd -- "$dir" || exit 1
-    find . -type f -print0 | LC_ALL=C sort -z | xargs -0 -r sha256sum
-  ) | sha256sum | cut -d' ' -f1
-}
-
-tree_differs() {
-  local src="$1" dest="$2" rel
-  while IFS= read -r -d '' rel; do
-    if [[ ! -e "$dest/$rel" ]] || ! cmp -s -- "$src/$rel" "$dest/$rel"; then
-      return 0
-    fi
-  done < <(cd -- "$src" && find . -type f -print0 | LC_ALL=C sort -z)
-  return 1
-}
-
-stamp_matches() {
-  local stamp="$1" sig="$2"
-  [[ -f "$stamp" && "$(<"$stamp")" == "$sig" ]]
-}
-
-stamp_write() {
-  mkdir -p -- "$(dirname -- "$1")"
-  printf '%s\n' "$2" > "$1"
-}
-
 backup_theme() {
-  local unique
-  mkdir -p -- "$BACKUP_ROOT"
-  unique="$(mktemp -d -- "$BACKUP_ROOT/$(date +%Y%m%d-%H%M%S).XXXXXX")"
-  cp -a -- "$THEME_DEST" "$unique/$THEME_SLUG"
-  printf '%s\n' "$unique/$THEME_SLUG"
+  backup_dir "$THEME_SLUG" "$THEME_DEST" "$BACKUP_ROOT"
 }
 
 install_theme_files() {
