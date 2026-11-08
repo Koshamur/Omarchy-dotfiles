@@ -33,9 +33,9 @@ cd Omarchy-dotfiles
 *При первом запуске setup.sh:*
 1. создаёт резервную копию текущих конфигов;
 2. копирует <kbd>hypr/ и ghostty/ в ~/.config;
-3. по очереди запускает install_packages.sh и ohmyzsh-setup.sh.
+3. по очереди запускает <kbd>install_packages.sh и ohmyzsh-setup.sh.
 Повторные запуски пропускают уже выполненную работу, пока исходные файлы
-не изменились. Отметки хранятся в ~/.local/state/system-setup/.
+не изменились. Отметки хранятся в <kbd>~/.local/state/system-setup/.
 
 *Примечание*
 `hypr/*.lua` рассчитаны на Omarchy. На чистом Arch без Omarchy
