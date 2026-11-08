@@ -20,20 +20,26 @@ This repository contains a set of configs and scripts needed to automate the set
 ## Быстрый запуск
 
 ```bash
-cd ~/Downloads/System
+git clone https://github.com/Koshamur/Omarchy-dotfiles.git
+cd Omarchy-dotfiles
 ./setup.sh
-Параметры:
-./setup.sh --configs-only   # только скопировать hypr/ и ghostty/ в ~/.config
+```
+
+*Параметры:*
+`./setup.sh --configs-only   # только скопировать hypr/ и ghostty/ в ~/.config
 ./setup.sh --scripts-only   # только выполнить установочные скрипты
 ./setup.sh --force          # повторить копирование и выполнение
-./setup.sh --help           # справка
-При первом запуске setup.sh:
+./setup.sh --help           # справка`
+
+*При первом запуске setup.sh:*
 1. создаёт резервную копию текущих конфигов;
 2. копирует hypr/ и ghostty/ в ~/.config;
 3. по очереди запускает install_packages.sh и ohmyzsh-setup.sh.
 Повторные запуски пропускают уже выполненную работу, пока исходные файлы
 не изменились. Отметки хранятся в ~/.local/state/system-setup/.
-Примечание
+
+*Примечание*
 hypr/*.lua рассчитаны на Omarchy. На чистом Arch без Omarchy
 bindings.lua не заработает, а input.lua и looknfeel.lua потребуют
 подключения в собственном Lua-конфиге Hyprland
+`
