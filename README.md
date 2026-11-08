@@ -16,6 +16,7 @@ This repository contains a set of configs and scripts needed to automate the set
 | `Shell/ohmyzsh-setup.sh` | Установка Zsh, Oh My Zsh, Powerlevel10k и плагинов |
 | `Shell/theme.sh` | Установка темы Fjord-frost |
 | `Shell/verify.sh` | Проверка установки всех конфигов и вывод недостающих элементов |
+| `Shell/services.sh` | Включает сервисы и службы | 
 | `setup.sh` | Копирует конфиги в `~/.config` и запускает остальные скрипты |
 | `theme/fjord-frost` | Файлы темы рабочего стола и приложений Fjord-frost |
 | `Makefile` | Быстрый запуск команд через make ... (аргументы) | 
