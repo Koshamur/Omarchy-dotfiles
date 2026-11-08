@@ -25,10 +25,10 @@ cd Omarchy-dotfiles
 ```
 
 *Параметры:*
-`./setup.sh --configs-only   # только скопировать hypr/ и ghostty/ в ~/.config
-./setup.sh --scripts-only   # только выполнить установочные скрипты
-./setup.sh --force          # повторить копирование и выполнение
-./setup.sh --help           # справка`
+`./setup.sh --configs-only   # только скопировать hypr/ и ghostty/ в ~/.config`
+`./setup.sh --scripts-only   # только выполнить установочные скрипты`
+`./setup.sh --force          # повторить копирование и выполнение`
+`./setup.sh --help           # справка`
 
 *При первом запуске setup.sh:*
 1. создаёт резервную копию текущих конфигов;
