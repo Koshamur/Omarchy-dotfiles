@@ -41,4 +41,3 @@ cd Omarchy-dotfiles
 `hypr/*.lua` рассчитаны на Omarchy. На чистом Arch без Omarchy
 `bindings.lua` не заработает, а `input.lua` и `looknfeel.lua` потребуют
 подключения в собственном Lua-конфиге Hyprland
-`
