@@ -39,7 +39,7 @@ cd Omarchy-dotfiles
 3. по очереди запускает <kbd>install_packages.sh и ohmyzsh-setup.sh.</kbd>
 Повторные запуски пропускают уже выполненную работу, пока исходные файлы
 не изменились. Отметки хранятся в <kbd>~/.local/state/system-setup/.</kbd>
-4. Копирует тему в <kbd>.config/omarchy/themes/fjord-frost/.</kbd>
+4. Копирует тему в <kbd>~/.config/omarchy/themes/fjord-frost/.</kbd>
 
 ## Make
 
@@ -47,15 +47,16 @@ cd Omarchy-dotfiles
 
 | Команда | Действие |
 |---|---|
-| `make` | показать справку |
-| `make install` | применить конфиги и выполнить скрипты из `Shell/` |
-| `make configs` | только скопировать конфиги |
-| `make scripts` | только выполнить скрипты из `Shell/` |
-| `make theme` | установить и применить тему Fjord Frost |
-| `make force` | повторить всё принудительно |
-| `make check` | проверить скрипты через `bash -n` и `shellcheck` |
-| `make verify` | проверить состояние системы |
-| `make update` | сделать `git pull --ff-only` и повторно применить настройки |
+| `make` | Показать справку |
+| `make install` | Применить конфиги и выполнить скрипты из `Shell/` |
+| `make configs` | Только скопировать конфиги |
+| `make scripts` | Только выполнить скрипты из `Shell/` |
+| `make theme` | Установить и применить тему Fjord Frost |
+| `make force` | Повторить всё принудительно |
+| `make check` | Проверить скрипты через `bash -n` и `shellcheck` |
+| `make verify` | Проверить состояние системы |
+| `make update` | Сделать `git pull --ff-only` и повторно применить настройки |
+| `make services` | Включить сервисы и службы |
 
 *Примечание*
 `hypr/*.lua` рассчитаны на Omarchy. На чистом Arch без Omarchy
