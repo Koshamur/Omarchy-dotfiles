@@ -37,7 +37,7 @@ cd Omarchy-dotfiles
 *При первом запуске setup.sh:*
 1. создаёт резервную копию текущих конфигов;
 2. копирует <kbd>hypr/ и ghostty/ в ~/.config;
-3. по очереди запускает <kbd>install_packages.sh и ohmyzsh-setup.sh.</kbd>
+3. по очереди запускает <kbd>install_packages.sh, ohmyzsh-setup.sh, services.sh, theme.sh и verify.sh.</kbd>
 Повторные запуски пропускают уже выполненную работу, пока исходные файлы
 не изменились. Отметки хранятся в <kbd>~/.local/state/system-setup/.</kbd>
 4. Копирует тему в <kbd>~/.config/omarchy/themes/fjord-frost/.</kbd>
