@@ -37,6 +37,7 @@ cd Omarchy-dotfiles
 Повторные запуски пропускают уже выполненную работу, пока исходные файлы
 не изменились. Отметки хранятся в <kbd>~/.local/state/system-setup/.</kbd>
 4. Копирует тему в <kbd>.config/omarchy/themes/fjord-frost/.</kbd>
+
 *Примечание*
 `hypr/*.lua` рассчитаны на Omarchy. На чистом Arch без Omarchy
 `bindings.lua` не заработает, а `input.lua` и `looknfeel.lua` потребуют
