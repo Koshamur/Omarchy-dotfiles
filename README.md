@@ -12,10 +12,13 @@ This repository contains a set of configs and scripts needed to automate the set
 | `hypr/input.lua` | Раскладка `us,ru`, переключение `Alt+Shift`, настройки ввода |
 | `hypr/looknfeel.lua` | Внешний вид: отступы, рамки, скругления, затемнение окон |
 | `ghostty/config` | Настройки терминала Ghostty: шрифт, цвета, прозрачность, клавиши |
-| `install_packages.sh` | Установка пакетов из репозиториев Arch, AUR и Flatpak |
-| `ohmyzsh-setup.sh` | Установка Zsh, Oh My Zsh, Powerlevel10k и плагинов |
+| `Shell/install_packages.sh` | Установка пакетов из репозиториев Arch, AUR и Flatpak |
+| `Shell/ohmyzsh-setup.sh` | Установка Zsh, Oh My Zsh, Powerlevel10k и плагинов |
+| `Shell/theme.sh` | Установка темы Fjord-frost |
+| `Shell/verify.sh` | Проверка установки всех конфигов и вывод недостающих элементов |
 | `setup.sh` | Копирует конфиги в `~/.config` и запускает остальные скрипты |
-| `theme/fjord-frost` | Тема рабочего стола и приложений Fjord-frost |
+| `theme/fjord-frost` | Файлы темы рабочего стола и приложений Fjord-frost |
+| `Makefile` | Быстрый запуск команд через make ... (аргументы) | 
 ## Быстрый запуск
 
 ```bash
