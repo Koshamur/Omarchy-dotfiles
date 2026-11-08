@@ -15,7 +15,6 @@ This repository contains a set of configs and scripts needed to automate the set
 | `install_packages.sh` | Установка пакетов из репозиториев Arch, AUR и Flatpak |
 | `ohmyzsh-setup.sh` | Установка Zsh, Oh My Zsh, Powerlevel10k и плагинов |
 | `setup.sh` | Копирует конфиги в `~/.config` и запускает остальные скрипты |
-| `Ohmyzsh.txt` | Заметки с исходной инструкцией по настройке Zsh |
 
 ## Быстрый запуск
 
