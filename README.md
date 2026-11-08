@@ -38,6 +38,22 @@ cd Omarchy-dotfiles
 не изменились. Отметки хранятся в <kbd>~/.local/state/system-setup/.</kbd>
 4. Копирует тему в <kbd>.config/omarchy/themes/fjord-frost/.</kbd>
 
+## Make
+
+В корне репозитория есть `Makefile` с короткими командами:
+
+| Команда | Действие |
+|---|---|
+| `make` | показать справку |
+| `make install` | применить конфиги и выполнить скрипты из `Shell/` |
+| `make configs` | только скопировать конфиги |
+| `make scripts` | только выполнить скрипты из `Shell/` |
+| `make theme` | установить и применить тему Fjord Frost |
+| `make force` | повторить всё принудительно |
+| `make check` | проверить скрипты через `bash -n` и `shellcheck` |
+| `make verify` | проверить состояние системы |
+| `make update` | сделать `git pull --ff-only` и повторно применить настройки |
+
 *Примечание*
 `hypr/*.lua` рассчитаны на Omarchy. На чистом Arch без Omarchy
 `bindings.lua` не заработает, а `input.lua` и `looknfeel.lua` потребуют
