@@ -49,7 +49,8 @@ sudo pacman -Syu --needed \
     qbittorrent \
     shellcheck \
     wget \
-    curl  
+    curl \
+    ttf-jetbrains-mono-nerd
 
 # 3. Install AUR packages (try yay, then paru)
 AUR_PACKAGES="visual-studio-code-bin ghostty telegram-desktop"
