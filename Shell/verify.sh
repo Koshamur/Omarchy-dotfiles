@@ -57,6 +57,7 @@ for file in \
   Shell/verify.sh \
   Shell/install_packages.sh \
   Shell/ohmyzsh-setup.sh \
+  Shell/services.sh \
   Shell/theme.sh \
   hypr/bindings.lua \
   hypr/input.lua \
@@ -72,7 +73,7 @@ else
   fail "отсутствуют файлы: ${missing[*]}"
 fi
 
-for file in setup.sh Shell/install_packages.sh Shell/ohmyzsh-setup.sh Shell/theme.sh Shell/verify.sh; do
+for file in setup.sh Shell/install_packages.sh Shell/ohmyzsh-setup.sh Shell/services.sh Shell/theme.sh Shell/verify.sh; do
   if [[ -x "$ROOT/$file" ]]; then
     pass "$file исполняемый"
   else
