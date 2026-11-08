@@ -5,7 +5,7 @@ SHELL := /bin/bash
 ROOT := $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
 SCRIPTS := setup.sh $(wildcard Shell/*.sh)
 
-.PHONY: help install configs scripts theme force check syntax shellcheck verify update
+.PHONY: help install configs scripts services theme force check syntax shellcheck verify update
 
 help:
 	@echo "Omarchy dotfiles — доступные команды:"
@@ -13,6 +13,7 @@ help:
 	@echo "  make install     применить конфиги и выполнить скрипты из Shell/"
 	@echo "  make configs     только скопировать конфиги (hypr, ghostty)"
 	@echo "  make scripts     только выполнить скрипты из Shell/"
+	@echo "  make services    включить docker, bluetooth и fstrim.timer"
 	@echo "  make theme       установить и применить тему Fjord Frost"
 	@echo "  make force       скопировать и выполнить всё заново"
 	@echo "  make check       bash -n + shellcheck для всех скриптов"
@@ -30,6 +31,9 @@ configs:
 
 scripts:
 	cd "$(ROOT)" && ./setup.sh --scripts-only
+
+services:
+	cd "$(ROOT)" && ./Shell/services.sh
 
 theme:
 	cd "$(ROOT)" && ./Shell/theme.sh
