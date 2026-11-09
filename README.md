@@ -17,6 +17,7 @@ This repository contains a set of configs and scripts needed to automate the set
 | `Shell/theme.sh` | Установка темы Fjord-frost |
 | `Shell/verify.sh` | Проверка установки всех конфигов и вывод недостающих элементов |
 | `Shell/services.sh` | Включает сервисы и службы | 
+| `Shell/rollback.sh` | Восстанавливает hypr и ghostty из backup-ов | 
 | `setup.sh` | Копирует конфиги в `~/.config` и запускает остальные скрипты |
 | `theme/fjord-frost` | Файлы темы рабочего стола и приложений Fjord-frost |
 | `Makefile` | Быстрый запуск команд через make ... (аргументы) | 
@@ -58,6 +59,35 @@ cd Omarchy-dotfiles
 | `make verify` | Проверить состояние системы |
 | `make update` | Сделать `git pull --ff-only` и повторно применить настройки |
 | `make services` | Включить сервисы и службы |
+
+## Возможности
+
+- **Повторный запуск безопасен** — `setup.sh` копирует конфиги и запускает
+  скрипты только при изменении исходников. Отметки хранятся в
+  `~/.local/state/system-setup/`.
+- **Dry-run** — `./setup.sh --dry-run` (или `make dry-run`) показывает план,
+  ничего не создавая, не копируя и не запуская.
+- **Логирование** — весь вывод пишется в `~/.local/state/system-setup/setup.log`,
+  включая вывод дочерних скриптов.
+- **Защита от параллельного запуска** — второй экземпляр `setup.sh`
+  блокируется через `flock`.
+- **Резервные копии** — перед изменением `hypr/` и `ghostty/` создаётся общий
+  бэкап в `~/.local/state/system-setup/backups/`.
+- **Откат** — `make rollback` восстанавливает `hypr/`, `ghostty/` и тему
+  Fjord Frost из последнего бэкапа. Перед откатом текущее состояние тоже
+  сохраняется, поэтому откат можно откатить.
+- **Общая библиотека** — цвета, сообщения, отпечатки файлов и работа с
+  бэкапами вынесены в `Shell/lib/common.sh`.
+
+### Откат
+
+- `./Shell/rollback.sh --list        # список бэкапов`
+- `./Shell/rollback.sh --last        # восстановить последний (с подтверждением)`
+- `./Shell/rollback.sh --dry-run     # показать план без изменений`
+- `./Shell/rollback.sh --yes --last  # без вопроса`
+- `./Shell/rollback.sh <имя>         # конкретный бэкап`
+- `verify.sh в setup.sh не входит — проверка состояния системы запускается
+отдельно через make verify.`
 
 *Примечание*
 `hypr/*.lua` рассчитаны на Omarchy. На чистом Arch без Omarchy
