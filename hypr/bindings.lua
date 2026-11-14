@@ -39,6 +39,15 @@ for key, app in pairs(app_map) do
   o.bind("ALT + " .. key, app.name, app.cmd)
 end
 
+local site_map = {
+  ["1"] = { name = "GitHub", url = "https://github.com" },
+  ["2"] = { name = "Yandexmail", url = "https://mail.yandex.ru" }
+}
+
+for key, site in pairs(site_map) do
+  o.bind("CONTROL + " .. key, site.name, { webapp = site.url })
+end
+
 hl.unbind("SUPER + SPACE")
   o.bind("SUPER + SPACE", "Terminal", { omarchy = "terminal" })
 o.bind("SUPER + CONTROL + M", "Omarchy menu", "omarchy-menu toggle root")
